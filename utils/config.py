@@ -7,7 +7,6 @@
 import yaml
 import copy
 from singleton import Singleton
-from utils import version_number
 
 class BasicConfig(object):
     _callback = None
@@ -58,7 +57,6 @@ class BasicConfig(object):
 
     def save(self, filename):
         with file(filename, 'w') as fp:
-            self.set('version_number', version_number)
             yaml.dump(self._config, fp, default_flow_style=False)
             self._modified = False
 
