@@ -12,9 +12,6 @@ class TestFresnel(unittest.TestCase):
     """Testing the fresnel module"""
 
     def test_angle(self):
-        a = fresnel.angle(np.pi/4, 1.0, 1.0)
-        self.assertAlmostEqual(a, np.pi/4, 7)
-
         n = np.arange(1, 1.5, 10)
         a = fresnel.angle(np.pi/4, 1.0, n)
         self.assertEqual(len(n), len(a))

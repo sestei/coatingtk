@@ -67,9 +67,9 @@ class TestStack(unittest.TestCase):
         stacks_n = np.array([1.0,n_sio] + [n_ta, n_sio]*8)
         stacks_n[-1] = 1.52
         stacks_d = np.array([364,114,181,113,181,113,178,112,178,115,178,111,173,108,196,129])
-        stack = stacks.Stack(stacks_n, stacks_d)
+        stack = stacks.Stack(stacks_n, stacks_d, 1064)
 
-        rs, rp = stack.reflectivity(1064)
+        rs, rp = stack.reflectivity()
         
         self.assertAlmostEqual(rs, 0.9982097, 6)
         self.assertAlmostEqual(rp, 0.9982097, 6)
@@ -81,11 +81,11 @@ class TestStack(unittest.TestCase):
 
         stacks_n = np.array([1.0, n_sio, n_ta, n_sio, n_ta, n_sio, 1.5163]) # matches "GLASS" in TFcalc
         stacks_d = np.array([270.22,189.02,270.22,189.02,270.22])
-        stack = stacks.Stack(stacks_n, stacks_d)
+        stack = stacks.Stack(stacks_n, stacks_d, 1550)
 
-        rs, rp = stack.reflectivity(1550)
+        rs, rp = stack.reflectivity()
         print("Reflectivity: {:.2f}%".format(rs*100))
-        x,y = stack.efi(1550,30)
+        x,y = stack.efi(30)
         pl.plot(x,y,'-')
         pl.show()
 
