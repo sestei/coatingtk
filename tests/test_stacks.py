@@ -5,8 +5,8 @@
 # Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 import unittest
-import stacks
 import numpy as np
+from coatingtk import stacks
 
 class TestStack(unittest.TestCase):
     """Testing the stack module"""

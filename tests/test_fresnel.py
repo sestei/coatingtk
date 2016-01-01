@@ -5,8 +5,8 @@
 # Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 import unittest
-import fresnel
 import numpy as np
+from coatingtk import fresnel
 
 class TestFresnel(unittest.TestCase):
     """Testing the fresnel module"""
