@@ -43,7 +43,7 @@ class Coating(object):
         cdict['substrate'] = self.substrate.name
         cdict['superstrate'] = self.superstrate.name
         BasicConfig.save_dict({'coating': cdict}, filename)
-        
+
     def create_stack(self, lambda0=0.0, AOI=0.0):
         """
         Returns the optical stack for a specific wavelength and AOI.
@@ -93,43 +93,43 @@ class Coating(object):
             l.thickness = t
         self.update_thickness()
 
-    def yPara(self):
+    def y_para(self):
         """Total parallel Young's modulus."""
         return 1/self.d * sum([l.d * l.material.Y for l in self.layers])
 
-    def yPerp(self):
+    def y_perp(self):
         """Total perpendicular Young's modulus."""
         return self.d / sum([l.d / l.material.Y for l in self.layers])
 
-    def phiPara(self):
+    def phi_para(self):
         """Total parallel loss angle."""
-        return 1 / (self.d * self.yPara()) * sum([l.material.Y * l.material.phi * l.d for l in self.layers])
+        return 1 / (self.d * self.y_para()) * sum([l.material.Y * l.material.phi * l.d for l in self.layers])
 
-    def phiPerp(self):
+    def phi_perp(self):
         """Total perpendicular loss angle."""
-        return self.yPerp() / self.d * sum([l.d * l.material.phi / l.material.Y for l in self.layers])
+        return self.y_perp() / self.d * sum([l.d * l.material.phi / l.material.Y for l in self.layers])
 
-    def sigmaPara(self):
+    def sigma_para(self):
         """Total stack parallel Poisson's ratio."""
         return np.mean([l.material.sigma for l in self.layers])
 
-    def sigmaPerp(self):
+    def sigma_perp(self):
         """Total perpendicular Poisson's ratio."""
         return sum([l.material.sigma * l.material.Y * l.d for l in self.layers]) / sum([l.material.Y * l.d for l in self.layers])
 
     def phi(self, beam_size):
         """Effective loss angle."""
-        return (self.d / (np.sqrt(np.pi) * beam_size * self.yPerp()) *
-            (self.phiPerp() *
+        return (self.d / (np.sqrt(np.pi) * beam_size * self.y_perp()) *
+            (self.phi_perp() *
              (self.substrate.Y / (1 - self.substrate.sigma ** 2) -
-              2 * self.sigmaPerp() ** 2 * self.substrate.Y * self.yPara() /
-              (self.yPerp() * (1 - self.substrate.sigma ** 2) * (1 - self.sigmaPara()))) +
-             self.yPara() * self.sigmaPerp() * (1 - 2 * self.substrate.sigma) /
-             ((1 - self.sigmaPara()) * (1 - self.substrate.sigma)) *
-             (self.phiPara() - self.phiPerp()) +
-             self.yPara() * self.yPerp() * (1 + self.substrate.sigma) *
-             (self.phiPara() * (1 - 2 * self.substrate.sigma) ** 2) /
-             (self.substrate.Y * (1 - self.sigmaPara() ** 2) * (1 - self.substrate.sigma))))
+              2 * self.sigma_perp() ** 2 * self.substrate.Y * self.y_para() /
+              (self.y_perp() * (1 - self.substrate.sigma ** 2) * (1 - self.sigma_para()))) +
+             self.y_para() * self.sigma_perp() * (1 - 2 * self.substrate.sigma) /
+             ((1 - self.sigma_para()) * (1 - self.substrate.sigma)) *
+             (self.phi_para() - self.phi_perp()) +
+             self.y_para() * self.y_perp() * (1 + self.substrate.sigma) *
+             (self.phi_para() * (1 - 2 * self.substrate.sigma) ** 2) /
+             (self.substrate.Y * (1 - self.sigma_para() ** 2) * (1 - self.substrate.sigma))))
 
     def R(self, lambda0, AOI=0.0):
         """
@@ -164,5 +164,3 @@ class Layer(object):
     def thickness(self, value):
         self._thickness = float(value)
         self._d = value * 1e-9
-
-
