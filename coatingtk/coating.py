@@ -8,6 +8,7 @@ import numpy as np
 from copy import deepcopy
 from materials import MaterialLibrary
 from stacks import Stack
+from constants import Physical
 from itertools import izip
 
 np.seterr(invalid='raise')
@@ -95,7 +96,7 @@ class Coating(object):
 
     def y_para(self):
         """Total parallel Young's modulus."""
-        return 1/self.d * sum([l.d * l.material.Y for l in self.layers])
+        return 1 / self.d * sum([l.d * l.material.Y for l in self.layers])
 
     def y_perp(self):
         """Total perpendicular Young's modulus."""
@@ -103,11 +104,13 @@ class Coating(object):
 
     def phi_para(self):
         """Total parallel loss angle."""
-        return 1 / (self.d * self.y_para()) * sum([l.material.Y * l.material.phi * l.d for l in self.layers])
+        return 1 / (self.d * self.y_para()) \
+            * sum([l.material.Y * l.material.phi * l.d for l in self.layers])
 
     def phi_perp(self):
         """Total perpendicular loss angle."""
-        return self.y_perp() / self.d * sum([l.d * l.material.phi / l.material.Y for l in self.layers])
+        return self.y_perp() / self.d \
+            * sum([l.d * l.material.phi / l.material.Y for l in self.layers])
 
     def sigma_para(self):
         """Total stack parallel Poisson's ratio."""
@@ -115,21 +118,31 @@ class Coating(object):
 
     def sigma_perp(self):
         """Total perpendicular Poisson's ratio."""
-        return sum([l.material.sigma * l.material.Y * l.d for l in self.layers]) / sum([l.material.Y * l.d for l in self.layers])
+        return sum([l.material.sigma * l.material.Y * l.d for l in self.layers]) \
+            / sum([l.material.Y * l.d for l in self.layers])
 
     def phi(self, beam_size):
         """Effective loss angle."""
         return (self.d / (np.sqrt(np.pi) * beam_size * self.y_perp()) *
-            (self.phi_perp() *
-             (self.substrate.Y / (1 - self.substrate.sigma ** 2) -
-              2 * self.sigma_perp() ** 2 * self.substrate.Y * self.y_para() /
-              (self.y_perp() * (1 - self.substrate.sigma ** 2) * (1 - self.sigma_para()))) +
-             self.y_para() * self.sigma_perp() * (1 - 2 * self.substrate.sigma) /
-             ((1 - self.sigma_para()) * (1 - self.substrate.sigma)) *
-             (self.phi_para() - self.phi_perp()) +
-             self.y_para() * self.y_perp() * (1 + self.substrate.sigma) *
-             (self.phi_para() * (1 - 2 * self.substrate.sigma) ** 2) /
-             (self.substrate.Y * (1 - self.sigma_para() ** 2) * (1 - self.substrate.sigma))))
+            (self.phi_perp()
+             * (self.substrate.Y / (1 - self.substrate.sigma ** 2)
+              - 2 * self.sigma_perp() ** 2 * self.substrate.Y * self.y_para()
+              / (self.y_perp() * (1 - self.substrate.sigma ** 2)
+              * (1 - self.sigma_para())))
+             + self.y_para() * self.sigma_perp()
+             * (1 - 2 * self.substrate.sigma)
+             / ((1 - self.sigma_para()) * (1 - self.substrate.sigma))
+             * (self.phi_para() - self.phi_perp()) + self.y_para()
+             * self.y_perp() * (1 + self.substrate.sigma)
+             * (self.phi_para() * (1 - 2 * self.substrate.sigma) ** 2)
+             / (self.substrate.Y * (1 - self.sigma_para() ** 2)
+              * (1 - self.substrate.sigma))))
+
+    def brownian_noise(self, freq, beam_size, temperature):
+        """Coating Brownian noise calculation."""
+        return 2 * Physical.kB * temperature / (np.sqrt(np.pi ** 3) \
+            * freq * beam_size * self.coating.substrate.Y) \
+            * (1 - self.coating.substrate.sigma ** 2) * self.coating.phi(beam_size)
 
     def R(self, lambda0, AOI=0.0):
         """
@@ -145,7 +158,6 @@ class Coating(object):
 
     def Rp(self, lambda0, AOI=0.0):
         return self.R(lambda0, AOI)[1]
-
 
 class Layer(object):
     def __init__(self, material, thickness):
