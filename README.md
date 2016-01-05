@@ -3,6 +3,8 @@ coatingtk
 
 Python-package for simulation of dielectric mirror coatings.
 
+*This package used to come with a graphical user interface, this is now in a separate package: [CoatingGUI](https://github.com/sestei/CoatingGUI).*
+
 The goal of this project is to provide an easy interface for coating
 simulations, tailored to the needs of the gravitational wave community.
 Especially, this means that this project is focussed on rather simple (design-
