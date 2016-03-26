@@ -12,7 +12,7 @@
 # (defining the number of layers and the materials)
 
 import numpy as np
-from dielectric import coating
+from coatingtk import coating
 from scipy.optimize import fmin
 
 
