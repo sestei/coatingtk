@@ -105,32 +105,36 @@ class Stack(object):
 
         return Ms, Mp
 
-    def efi(self, steps=30):
+    def efi(self, steps=30, pol='s'):
         # EFI calculation following Arnon/Baumeister 1980
         # TODO: this needs to be combined with the above calculation, can't be
         #       that difficult!
         # TODO: AOI is not taken into account for now, as well as s/p distinction
 
-        def M_i(beta_i, q_i):
+        def M_i(beta_i, q_i): # (2)
             return np.matrix([[np.cos(beta_i), 1j/q_i * np.sin(beta_i)],
                               [1j*q_i*np.sin(beta_i), np.cos(beta_i)]])
 
         def beta_i(theta_i, n_i, h_i):
-            return 2*np.pi/self._lambda_0*np.cos(theta_i)*n_i*h_i
+            return 2*np.pi/self._lambda_0*np.cos(theta_i)*n_i*h_i # (3)
 
-        def q_i(n_i):
-            return n_i # for now, but see (5) and (6) of Arnon/Baumeister 1980
-                       # for non-normal incidence
+        def q_i(n_i, theta_i):
+            if pol == 's':
+                return n_i*np.cos(theta_i) # (5)
+            elif pol == 'p':
+                return n_i/np.cos(theta_i) # (6)
+            else:
+                raise StackException('Unknown polarisation: %s'.format(pol))
 
-        def _M():
+        def _M(): # (7)
             myM = np.eye(2)
-            for n_i, h_i in izip(self._stacks_n[1:-1], self._stacks_d):
-                myM = myM * M_i(beta_i(0.0, n_i, h_i), q_i(n_i))
+            for n_i, h_i, a_i in izip(self._stacks_n[1:-1], self._stacks_d, self._stacks_a[0:-1]):
+                myM = myM * M_i(beta_i(a_i, n_i, h_i), q_i(n_i, a_i))
             return myM
 
         def E0p2(myM):  # (10) 
-            q0 = q_i(self._stacks_n[0])
-            qs = q_i(self._stacks_n[-1])
+            q0 = q_i(self._stacks_n[0], self._alpha_0)
+            qs = q_i(self._stacks_n[-1], self._stacks_a[-1])
             # possibly need 1j*m12 etc. here?
             return 0.25*( abs(myM[0,0]+myM[1,1]*qs/q0)**2 
                          +abs(myM[1,0]/q0 + myM[0,1] * qs)**2 )
@@ -140,26 +144,36 @@ class Stack(object):
 
         X = np.zeros(steps*self._layers)
         E2 = np.zeros(steps*self._layers)
+        self._update_angles()
+        
         curX = 0.0
+        corr = 1.0 # (15), updated below for p pol
         myM = _M()
         myMz = myM
-        qs = q_i(self._stacks_n[-1])
+        
+        qs = q_i(self._stacks_n[-1], self._stacks_a[-1])
         # propagate through stack, where steps is the number of points
         # calculated for each layer
         for ii in range(0, self._layers):
             n_i = self._stacks_n[ii]
             if ii == 0:
                 deltaL = -self._lambda_0 / 2.0 / n_i / steps
+                theta_i = self._alpha_0
             elif ii == self._layers-1:
                 deltaL = self._lambda_0 / 2.0 / n_i / steps
+                theta_i = self._stacks_a[-1]
             else:
                 deltaL = self._stacks_d[ii-1] / steps
+                theta_i = self._stacks_a[ii-1]
             
+            if pol == 'p':
+                corr = (np.cos(self._alpha_0)/np.cos(theta_i))**2
+
             for jj in range(0, steps):
                 curX += deltaL
                 X[ii*steps + jj] = curX
-                myMz = deltaM(beta_i(0.0, n_i, deltaL), q_i(n_i)) * myMz # (13)
-                E2[ii*steps + jj] = abs(myMz[0,0])**2 + abs(qs/1j*myMz[0,1])**2 # (14)
+                myMz = deltaM(beta_i(theta_i, n_i, deltaL), q_i(n_i, theta_i)) * myMz # (13)
+                E2[ii*steps + jj] = corr * abs(myMz[0,0])**2 + abs(qs/1j*myMz[0,1])**2 # (14)
 
             if ii == 0:
                 myMz = myM # reset matrix after superstrate calculations as we're now
