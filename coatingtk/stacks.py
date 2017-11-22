@@ -192,6 +192,10 @@ class Stack(object):
         rp = abs(Mp[1,0] / Mp[0,0])
         return (rs**2, rp**2)
 
+    def transmissivity(self):
+        Rs, Rp = self.reflectivity()
+        return (1.0-Rs, 1.0-Rp)
+
     def phase(self):
         Ms, Mp = self._propagate()
 
